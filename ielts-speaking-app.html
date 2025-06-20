@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Speaking Practice App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: white;
+            color: #4facfe;
+            border-bottom: 3px solid #4facfe;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .recording-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .category-selector {
+            margin-bottom: 30px;
+        }
+
+        .category-selector label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .category-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .record-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .record-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        .record-button.recording {
+            background: linear-gradient(135deg, #ff4757, #c44569);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+        }
+
+        .save-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .save-section.show {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .recordings-list {
+            margin-top: 20px;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+        }
+
+        .filter-section select {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .recording-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .recording-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .recording-title {
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .recording-category {
+            background: #4facfe;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .recording-date {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .recording-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .play-button {
+            background: linear-gradient(135deg, #2ed573, #7bed9f);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .delete-button {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin: 0 15px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .time-display {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎤 IELTS Speaking Practice</h1>
+            <p>提升你的口语表达能力</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('record')">录音练习</button>
+            <button class="tab" onclick="switchTab('recordings')">录音列表</button>
+        </div>
+
+        <div id="record-tab" class="tab-content active">
+            <div class="recording-section">
+                <div class="category-selector">
+                    <label for="category">选择练习类型：</label>
+                    <select id="category">
+                        <option value="Part 1">Part 1 - 个人信息与日常话题</option>
+                        <option value="Part 2">Part 2 - 个人陈述</option>
+                        <option value="Part 3">Part 3 - 深入讨论</option>
+                        <option value="Practice">Practice - 自由练习</option>
+                    </select>
+                </div>
+
+                <button id="recordButton" class="record-button" onclick="toggleRecording()">
+                    <span id="recordText">开始录音</span>
+                </button>
+
+                <div class="timer" id="timer">00:00</div>
+
+                <div id="statusMessage"></div>
+            </div>
+
+            <div id="saveSection" class="save-section">
+                <div class="input-group">
+                    <label for="recordingTitle">录音标题：</label>
+                    <input type="text" id="recordingTitle" placeholder="请输入录音标题">
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="saveRecording()">保存录音</button>
+                    <button class="btn btn-secondary" onclick="discardRecording()">重新录制</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="recordings-tab" class="tab-content">
+            <div class="filter-section">
+                <label for="filterCategory">筛选类型：</label>
+                <select id="filterCategory" onchange="filterRecordings()">
+                    <option value="all">全部</option>
+                    <option value="Part 1">Part 1</option>
+                    <option value="Part 2">Part 2</option>
+                    <option value="Part 3">Part 3</option>
+                    <option value="Practice">Practice</option>
+                </select>
+                <div class="storage-info">
+                    <span id="storageInfo">存储信息加载中...</span>
+                    <button class="btn btn-secondary" onclick="app.clearAllRecordings()" style="margin-left: 10px;">清空所有录音</button>
+                </div>
+            </div>
+            <div id="recordingsList" class="recordings-list"></div>
+        </div>
+    </div>
+
+    <script>
+        class IELTSSpeakingApp {
+            constructor() {
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.isRecording = false;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.currentAudio = null;
+                this.currentPlayingAudio = null;
+                this.currentPlayingId = null;
+                this.recordings = JSON.parse(localStorage.getItem('ielts-recordings') || '[]');
+                this.init();
+            }
+
+            init() {
+                this.loadRecordings();
+                this.requestMicrophonePermission();
+            }
+
+            async requestMicrophonePermission() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    this.showStatus('麦克风权限已获取', 'success');
+                } catch (error) {
+                    this.showStatus('需要麦克风权限才能录音', 'error');
+                }
+            }
+
+            async toggleRecording() {
+                if (this.isRecording) {
+                    this.stopRecording();
+                } else {
+                    await this.startRecording();
+                }
+            }
+
+            async startRecording() {
+                try {
+                    // 检查浏览器兼容性
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        this.showStatus('您的浏览器不支持录音功能，请使用Chrome、Firefox或Safari', 'error');
+                        return;
+                    }
+
+                    if (!window.MediaRecorder) {
+                        this.showStatus('您的浏览器不支持MediaRecorder，请升级浏览器', 'error');
+                        return;
+                    }
+
+                    // 显示获取权限提示
+                    this.showStatus('正在请求麦克风权限...', 'info');
+
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        } 
+                    });
+
+                    // 检查MediaRecorder支持的格式
+                    let mimeType = 'audio/webm';
+                    if (!MediaRecorder.isTypeSupported(mimeType)) {
+                        mimeType = 'audio/mp4';
+                        if (!MediaRecorder.isTypeSupported(mimeType)) {
+                            mimeType = 'audio/wav';
+                            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                                mimeType = ''; // 使用默认格式
+                            }
+                        }
+                    }
+
+                    this.mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+                    this.audioChunks = [];
+
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.audioChunks.push(event.data);
+                        }
+                    };
+
+                    this.mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(this.audioChunks, { 
+                            type: mimeType || 'audio/wav' 
+                        });
+                        
+                        if (audioBlob.size === 0) {
+                            this.showStatus('录音失败：没有录制到音频数据', 'error');
+                            return;
+                        }
+
+                        this.currentAudio = audioBlob;
+                        this.showSaveSection();
+                        this.showStatus(`录音完成！文件大小: ${Math.round(audioBlob.size / 1024)}KB`, 'success');
+                    };
+
+                    this.mediaRecorder.onerror = (event) => {
+                        console.error('MediaRecorder错误:', event.error);
+                        this.showStatus('录音过程中发生错误: ' + event.error, 'error');
+                    };
+
+                    this.mediaRecorder.start(1000); // 每秒收集一次数据
+                    this.isRecording = true;
+                    this.startTime = Date.now();
+                    this.updateUI();
+                    this.startTimer();
+                    this.showStatus('录音中... 请对着麦克风说话', 'info');
+
+                } catch (error) {
+                    console.error('录音启动失败:', error);
+                    let errorMessage = '录音启动失败: ';
+                    
+                    if (error.name === 'NotAllowedError') {
+                        errorMessage += '麦克风权限被拒绝，请在浏览器设置中允许麦克风访问';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMessage += '未找到麦克风设备，请检查设备连接';
+                    } else if (error.name === 'NotReadableError') {
+                        errorMessage += '麦克风被其他应用占用，请关闭其他录音应用';
+                    } else if (error.name === 'OverconstrainedError') {
+                        errorMessage += '麦克风不支持请求的音频格式';
+                    } else {
+                        errorMessage += error.message || '未知错误';
+                    }
+                    
+                    this.showStatus(errorMessage, 'error');
+                }
+            }
+
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    this.isRecording = false;
+                    this.stopTimer();
+                    this.updateUI();
+                    this.showStatus('录音完成', 'success');
+                }
+            }
+
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    const elapsed = Date.now() - this.startTime;
+                    const minutes = Math.floor(elapsed / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    document.getElementById('timer').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            updateUI() {
+                const button = document.getElementById('recordButton');
+                const text = document.getElementById('recordText');
+                
+                if (this.isRecording) {
+                    button.classList.add('recording');
+                    text.textContent = '停止录音';
+                } else {
+                    button.classList.remove('recording');
+                    text.textContent = '开始录音';
+                    document.getElementById('timer').textContent = '00:00';
+                }
+            }
+
+            showSaveSection() {
+                document.getElementById('saveSection').classList.add('show');
+                const category = document.getElementById('category').value;
+                const defaultTitle = `${category} - ${new Date().toLocaleString()}`;
+                document.getElementById('recordingTitle').value = defaultTitle;
+            }
+
+            hideSaveSection() {
+                document.getElementById('saveSection').classList.remove('show');
+                document.getElementById('recordingTitle').value = '';
+            }
+
+            async saveRecording() {
+                const title = document.getElementById('recordingTitle').value.trim();
+                const category = document.getElementById('category').value;
+                
+                if (!title) {
+                    this.showStatus('请输入录音标题', 'error');
+                    return;
+                }
+
+                if (!this.currentAudio) {
+                    this.showStatus('没有可保存的录音，请先录制音频', 'error');
+                    return;
+                }
+
+                try {
+                    // 检查存储空间
+                    const storageTest = this.checkStorageSpace();
+                    if (!storageTest.canStore) {
+                        this.showStatus(`存储空间不足！当前已使用 ${storageTest.usedMB}MB，建议删除一些旧录音`, 'error');
+                        return;
+                    }
+
+                    // 显示保存进度
+                    this.showStatus('正在保存录音...', 'info');
+
+                    const reader = new FileReader();
+                    
+                    reader.onload = () => {
+                        try {
+                            const recording = {
+                                id: Date.now(),
+                                title: title,
+                                category: category,
+                                date: new Date().toISOString(),
+                                audioData: reader.result,
+                                duration: this.calculateDuration(),
+                                size: Math.round(this.currentAudio.size / 1024) // KB
+                            };
+
+                            // 再次检查存储空间（包含新录音）
+                            const dataSize = JSON.stringify(recording).length * 2; // UTF-16 字符占用2字节
+                            if (dataSize > 4 * 1024 * 1024) { // 4MB 限制
+                                this.showStatus('录音文件过大，无法保存。请录制较短的音频', 'error');
+                                return;
+                            }
+
+                            this.recordings.unshift(recording);
+                            this.saveToLocalStorage();
+                            this.loadRecordings();
+                            this.hideSaveSection();
+                            this.currentAudio = null;
+                            this.showStatus(`录音保存成功！文件大小: ${recording.size}KB`, 'success');
+                            
+                        } catch (error) {
+                            console.error('保存录音时出错:', error);
+                            this.showStatus('保存录音失败: ' + error.message, 'error');
+                        }
+                    };
+
+                    reader.onerror = () => {
+                        this.showStatus('读取录音文件失败，请重试', 'error');
+                    };
+
+                    reader.readAsDataURL(this.currentAudio);
+
+                } catch (error) {
+                    console.error('保存录音过程中出错:', error);
+                    this.showStatus('保存录音失败: ' + error.message, 'error');
+                }
+            }
+
+            discardRecording() {
+                this.currentAudio = null;
+                this.hideSaveSection();
+                this.showStatus('录音已丢弃', 'info');
+            }
+
+            calculateDuration() {
+                const elapsed = Date.now() - this.startTime;
+                return Math.floor(elapsed / 1000);
+            }
+
+            saveToLocalStorage() {
+                try {
+                    const dataString = JSON.stringify(this.recordings);
+                    localStorage.setItem('ielts-recordings', dataString);
+                    
+                    // 验证保存是否成功
+                    const saved = localStorage.getItem('ielts-recordings');
+                    if (!saved || saved !== dataString) {
+                        throw new Error('数据保存验证失败');
+                    }
+                    
+                } catch (error) {
+                    if (error.name === 'QuotaExceededError') {
+                        this.showStatus('存储空间已满！请删除一些旧录音后重试', 'error');
+                        // 移除最后添加的录音
+                        this.recordings.shift();
+                    } else {
+                        console.error('保存到本地存储失败:', error);
+                        this.showStatus('保存失败: ' + error.message, 'error');
+                    }
+                    throw error;
+                }
+            }
+
+            checkStorageSpace() {
+                try {
+                    const currentData = localStorage.getItem('ielts-recordings') || '[]';
+                    const currentSize = currentData.length * 2; // UTF-16 编码
+                    const usedMB = (currentSize / (1024 * 1024)).toFixed(2);
+                    const maxSize = 5 * 1024 * 1024; // 5MB 安全限制
+                    
+                    return {
+                        canStore: currentSize < maxSize,
+                        usedMB: usedMB,
+                        remainingMB: ((maxSize - currentSize) / (1024 * 1024)).toFixed(2)
+                    };
+                } catch (error) {
+                    return { canStore: false, usedMB: 'unknown', remainingMB: '0' };
+                }
+            }
+
+            loadRecordings() {
+                this.displayRecordings(this.recordings);
+            }
+
+            displayRecordings(recordings) {
+                const container = document.getElementById('recordingsList');
+                
+                if (recordings.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i>🎤</i>
+                            <h3>还没有录音</h3>
+                            <p>开始你的第一次 IELTS 口语练习吧！</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = recordings.map(recording => `
+                    <div class="recording-item">
+                        <div class="recording-header">
+                            <div>
+                                <div class="recording-title">${recording.title}</div>
+                                <div class="recording-date">${new Date(recording.date).toLocaleString()}</div>
+                            </div>
+                            <span class="recording-category">${recording.category}</span>
+                        </div>
+                        <div class="recording-controls">
+                            <button class="play-button" onclick="app.togglePlayback('${recording.id}')">
+                                <span id="play-text-${recording.id}">播放</span>
+                            </button>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-${recording.id}"></div>
+                            </div>
+                            <span class="time-display" id="time-${recording.id}">
+                                ${this.formatDuration(recording.duration)}
+                            </span>
+                            <button class="delete-button" onclick="app.deleteRecording('${recording.id}')">删除</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            async togglePlayback(recordingId) {
+                const recording = this.recordings.find(r => r.id == recordingId);
+                if (!recording) return;
+
+                const playButton = document.getElementById(`play-text-${recordingId}`);
+                
+                if (this.currentPlayingId === recordingId) {
+                    if (this.currentPlayingAudio) {
+                        this.currentPlayingAudio.pause();
+                        this.currentPlayingAudio = null;
+                        this.currentPlayingId = null;
+                        playButton.textContent = '播放';
+                        this.resetProgress(recordingId);
+                    }
+                } else {
+                    if (this.currentPlayingAudio) {
+                        this.currentPlayingAudio.pause();
+                        if (this.currentPlayingId) {
+                            document.getElementById(`play-text-${this.currentPlayingId}`).textContent = '播放';
+                            this.resetProgress(this.currentPlayingId);
+                        }
+                    }
+
+                    try {
+                        const audio = new Audio(recording.audioData);
+                        this.currentPlayingAudio = audio;
+                        this.currentPlayingId = recordingId;
+                        
+                        audio.ontimeupdate = () => {
+                            const progress = (audio.currentTime / audio.duration) * 100;
+                            document.getElementById(`progress-${recordingId}`).style.width = `${progress}%`;
+                            document.getElementById(`time-${recordingId}`).textContent = 
+                                `${this.formatTime(audio.currentTime)} / ${this.formatTime(audio.duration)}`;
+                        };
+
+                        audio.onended = () => {
+                            playButton.textContent = '播放';
+                            this.currentPlayingAudio = null;
+                            this.currentPlayingId = null;
+                            this.resetProgress(recordingId);
+                        };
+
+                        await audio.play();
+                        playButton.textContent = '暂停';
+                    } catch (error) {
+                        this.showStatus('播放失败', 'error');
+                    }
+                }
+            }
+
+            resetProgress(recordingId) {
+                document.getElementById(`progress-${recordingId}`).style.width = '0%';
+                const recording = this.recordings.find(r => r.id == recordingId);
+                if (recording) {
+                    document.getElementById(`time-${recordingId}`).textContent = 
+                        this.formatDuration(recording.duration);
+                }
+            }
+
+            deleteRecording(recordingId) {
+                if (confirm('确定要删除这个录音吗？')) {
+                    this.recordings = this.recordings.filter(r => r.id != recordingId);
+                    this.saveToLocalStorage();
+                    this.loadRecordings();
+                    this.showStatus('录音已删除', 'info');
+                }
+            }
+
+            filterRecordings() {
+                const filterValue = document.getElementById('filterCategory').value;
+                const filteredRecordings = filterValue === 'all' 
+                    ? this.recordings 
+                    : this.recordings.filter(r => r.category === filterValue);
+                this.displayRecordings(filteredRecordings);
+            }
+
+            formatDuration(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            formatTime(seconds) {
+                if (isNaN(seconds)) return '0:00';
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            showStatus(message, type) {
+                const statusDiv = document.getElementById('statusMessage');
+                statusDiv.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 3000);
+            }
+
+            checkCompatibility() {
+                const issues = [];
+                
+                // 检查必要的API支持
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    issues.push('浏览器不支持获取麦克风权限');
+                }
+                
+                if (!window.MediaRecorder) {
+                    issues.push('浏览器不支持录音功能');
+                }
+                
+                if (!window.localStorage) {
+                    issues.push('浏览器不支持本地存储');
+                }
+                
+                if (!window.FileReader) {
+                    issues.push('浏览器不支持文件读取');
+                }
+
+                // 检查存储空间
+                const storageInfo = this.checkStorageSpace();
+                
+                if (issues.length > 0) {
+                    this.showStatus(`兼容性问题: ${issues.join(', ')}。建议使用Chrome、Firefox或Safari浏览器`, 'error');
+                } else {
+                    this.showStatus(`应用已就绪！存储空间: ${storageInfo.usedMB}MB已使用，${storageInfo.remainingMB}MB可用`, 'success');
+                }
+                
+                return issues.length === 0;
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            if (tabName === 'recordings') {
+                app.loadRecordings();
+            }
+        }
+
+        function toggleRecording() {
+            app.toggleRecording();
+        }
+
+        function saveRecording() {
+            app.saveRecording();
+        }
+
+        function discardRecording() {
+            app.discardRecording();
+        }
+
+        function filterRecordings() {
+            app.filterRecordings();
+        }
+
+        const app = new IELTSSpeakingApp();
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            app.checkCompatibility();
+        });
+    </script>
+</body>
+</html> 

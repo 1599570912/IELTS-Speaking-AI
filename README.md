@@ -1,97 +1,196 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 🎤 IELTS Speaking AI - 智能雅思口语练习应用
 
-# Getting Started
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-brightgreen.svg)](https://1599570912.github.io/IELTS-Speaking-AI/ielts-speaking-app-ai.html)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+> 🤖 AI驱动的雅思口语练习应用 - 实时语音识别、智能评分、专业题库、历史记录管理
 
-## Step 1: Start Metro
+## ✨ 特色功能
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+### 🎯 核心功能
+- **🎙️ 智能录音** - 高质量音频录制，支持多种格式
+- **🗣️ 实时语音识别** - Web Speech API实时转录
+- **🤖 AI智能评分** - 基于IELTS官方标准的四维评分
+- **📚 专业题库** - 210+道真题，涵盖Part 1/2/3
+- **📊 数据分析** - 详细的语音统计和改进建议
+- **📝 历史记录** - 完整的练习记录和进度跟踪
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### 🌟 技术亮点
+- **无需安装** - 基于Web技术，浏览器直接使用
+- **完全免费** - 开源项目，永久免费使用
+- **隐私保护** - 所有数据本地存储，不上传服务器
+- **跨平台** - 支持桌面、平板、手机多端使用
+- **PWA支持** - 可安装为桌面应用
+- **离线功能** - 基础录音功能支持离线使用
 
-```sh
-# Using npm
-npm start
+## 🚀 在线体验
 
-# OR using Yarn
-yarn start
+### 📱 立即开始
+**在线版本**: [https://1599570912.github.io/IELTS-Speaking-AI/ielts-speaking-app-ai.html](https://1599570912.github.io/IELTS-Speaking-AI/ielts-speaking-app-ai.html)
+
+### 🖥️ 本地部署
+```bash
+# 克隆项目
+git clone https://github.com/1599570912/IELTS-Speaking-AI.git
+
+# 进入目录
+cd IELTS-Speaking-AI
+
+# 直接打开HTML文件
+open ielts-speaking-app-ai.html
 ```
 
-## Step 2: Build and run your app
+## 📋 功能演示
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+### 🎯 智能练习流程
+```
+选择类别 → 获取题目 → 开始录音 → 实时转录 → AI分析 → 查看报告 → 历史记录
 ```
 
-### iOS
+### 📊 AI评分标准
+| 评分维度 | 评分范围 | 考察要点 |
+|----------|----------|----------|
+| **流畅度** | 1-9分 | 语速、停顿、连接词使用 |
+| **词汇** | 1-9分 | 词汇丰富度、准确性、适用性 |
+| **语法** | 1-9分 | 语法复杂度、准确性 |
+| **发音** | 1-9分 | 清晰度、音调变化 |
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+### 📚 题库内容
+| 类别 | 话题数量 | 题目数量 | 特色功能 |
+|------|----------|----------|----------|
+| **Part 1** | 40+ | 120+ | 日常生活话题，3-4个相关问题 |
+| **Part 2** | 30+ | 30+ | 描述类话题，包含详细要点 |
+| **Part 3** | 20+ | 60+ | 抽象讨论，深度思考题目 |
+| **Practice** | 全部 | 210+ | 综合练习，所有类别题目 |
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+## 🛠️ 技术架构
 
-```sh
-bundle install
+### 前端技术栈
+- **HTML5** - 现代Web标准
+- **CSS3** - 响应式设计和动画
+- **JavaScript ES6+** - 现代JavaScript特性
+- **Web APIs** - MediaRecorder、Speech Recognition、IndexedDB
+
+### 核心模块
+```
+ielts-speaking-app-ai.html     # 主应用文件
+├── speech-recognition-module.js  # 语音识别引擎
+├── ielts-question-bank.js       # 题库系统
+├── advanced-analysis-engine.js  # 进阶AI分析
+├── manifest.json               # PWA配置
+└── sw.js                      # Service Worker
 ```
 
-Then, and every time you update your native dependencies, run:
+### 数据存储
+- **IndexedDB** - 本地数据库存储
+- **localStorage** - 配置信息存储
+- **Blob/Base64** - 音频数据格式
 
-```sh
-bundle exec pod install
-```
+## 📖 详细文档
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### 📚 使用指南
+- [📋 完整使用说明](完整使用说明.md) - 详细的使用教程和学习策略
+- [🎯 题库集成说明](题库集成说明.md) - 题库功能详细介绍
+- [🚀 部署传播指南](部署传播指南.md) - 部署和分享方法
 
-```sh
-# Using npm
-npm run ios
+### 🔧 技术文档
+- [🤖 AI版本使用说明](AI版本使用说明.md) - AI功能详细说明
+- [🔧 AI版本修复说明](AI版本修复说明.md) - 问题解决方案
+- [📈 功能增强路线图](功能增强路线图.md) - 未来发展规划
 
-# OR using Yarn
-yarn ios
-```
+## 🎯 快速开始
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+### 1️⃣ 选择练习类别
+从Part 1、Part 2、Part 3或Practice中选择适合的练习类别
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+### 2️⃣ 获取练习题目
+- 🎲 **随机题目** - 系统随机选择题目
+- 📚 **话题选择** - 选择特定话题练习
 
-## Step 3: Modify your app
+### 3️⃣ 开始录音练习
+- 点击录音按钮开始练习
+- 观察实时语音转录
+- 根据题目要求自然回答
 
-Now that you have successfully run the app, let's make changes!
+### 4️⃣ 查看AI分析
+- 获得四维评分结果
+- 查看详细改进建议
+- 了解优势和薄弱环节
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+### 5️⃣ 管理历史记录
+- 回顾练习历史
+- 跟踪学习进度
+- 重复薄弱话题练习
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## 📊 项目统计
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+### 🎯 功能覆盖
+- ✅ 录音功能
+- ✅ 语音识别
+- ✅ AI智能评分
+- ✅ 题库系统
+- ✅ 历史记录
+- ✅ PWA支持
+- ✅ 响应式设计
+- ✅ 离线功能
 
-## Congratulations! :tada:
+### 📈 题库规模
+- **总题目数**: 210+道
+- **话题覆盖**: 90+个话题
+- **类别支持**: Part 1/2/3 + Practice
+- **答题技巧**: 每类别专业指导
 
-You've successfully run and modified your React Native App. :partying_face:
+## 🤝 贡献指南
 
-### Now what?
+### 🎯 如何贡献
+我们欢迎各种形式的贡献：
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+- 🐛 **报告Bug** - 在Issues中提交问题
+- 💡 **功能建议** - 提出新功能想法
+- 📝 **文档改进** - 改善文档质量
+- 🔧 **代码贡献** - 提交代码改进
 
-# Troubleshooting
+### 📋 开发流程
+1. Fork 项目
+2. 创建特性分支
+3. 提交更改
+4. 推送到分支
+5. 创建Pull Request
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+## 🆘 技术支持
 
-# Learn More
+### 💬 获取帮助
+- **GitHub Issues**: [提交问题](https://github.com/1599570912/IELTS-Speaking-AI/issues)
+- **文档查阅**: 查看详细使用文档
+- **在线演示**: 直接体验功能
 
-To learn more about React Native, take a look at the following resources:
+### 🔧 常见问题
+- **麦克风权限**: 确保浏览器允许麦克风访问
+- **语音识别**: 在安静环境中使用，说话清晰
+- **数据存储**: 所有数据本地存储，定期备份
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## 📄 开源协议
+
+本项目采用 [MIT License](LICENSE) 开源协议。
+
+## 🎉 致谢
+
+感谢所有为这个项目做出贡献的开发者和用户！
+
+### 🌟 特别感谢
+- Web Speech API 社区
+- IELTS 官方评分标准
+- 开源社区的支持
+
+## 📞 联系我们
+
+- **GitHub**: [@1599570912](https://github.com/1599570912)
+- **项目主页**: [IELTS-Speaking-AI](https://github.com/1599570912/IELTS-Speaking-AI)
+- **在线演示**: [Live Demo](https://1599570912.github.io/IELTS-Speaking-AI/ielts-speaking-app-ai.html)
+
+---
+
+⭐ 如果这个项目对您有帮助，请给它一个星标！
+
+🚀 立即开始您的IELTS口语提升之旅：[在线体验](https://1599570912.github.io/IELTS-Speaking-AI/ielts-speaking-app-ai.html)

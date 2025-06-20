@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>录音保存调试测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            padding: 12px 24px;
+            margin: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+        }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .debug-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 录音保存功能调试测试</h1>
+        
+        <div class="status" id="status">准备就绪</div>
+        
+        <div>
+            <button id="recordBtn" class="btn btn-primary" onclick="toggleRecording()">开始录音</button>
+            <button id="saveBtn" class="btn btn-success" onclick="saveTest()" disabled>保存测试</button>
+            <button class="btn btn-danger" onclick="clearData()">清除数据</button>
+        </div>
+        
+        <div class="timer" id="timer">00:00</div>
+        
+        <div>
+            <label for="title">录音标题:</label>
+            <input type="text" id="title" value="调试测试录音" style="width: 300px; padding: 8px;">
+        </div>
+        
+        <div class="debug-info" id="debugInfo">等待操作...</div>
+        
+        <div>
+            <h3>调试步骤:</h3>
+            <ol>
+                <li>点击"开始录音"按钮</li>
+                <li>说话几秒钟</li>
+                <li>再次点击停止录音</li>
+                <li>点击"保存测试"</li>
+                <li>查看调试信息</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        class DebugRecorder {
+            constructor() {
+                this.db = null;
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.isRecording = false;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.currentBlob = null;
+                
+                this.initDB();
+                this.log('调试录音器初始化完成');
+            }
+
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const debugInfo = document.getElementById('debugInfo');
+                const statusDiv = document.getElementById('status');
+                
+                const logMessage = `[${timestamp}] ${message}`;
+                debugInfo.textContent += logMessage + '\n';
+                debugInfo.scrollTop = debugInfo.scrollHeight;
+                
+                statusDiv.textContent = message;
+                statusDiv.className = 'status ' + (type === 'error' ? 'error' : type === 'success' ? 'success' : '');
+                
+                console.log(logMessage);
+            }
+
+            async initDB() {
+                try {
+                    this.log('正在初始化IndexedDB...');
+                    
+                    const request = indexedDB.open('DebugIELTS', 1);
+                    
+                    request.onerror = () => {
+                        this.log('数据库打开失败: ' + request.error, 'error');
+                    };
+                    
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        this.log('数据库连接成功', 'success');
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        this.log('正在创建数据库结构...');
+                        const db = event.target.result;
+                        
+                        if (!db.objectStoreNames.contains('recordings')) {
+                            const store = db.createObjectStore('recordings', { keyPath: 'id' });
+                            store.createIndex('date', 'date', { unique: false });
+                            this.log('数据库表创建完成');
+                        }
+                    };
+                    
+                } catch (error) {
+                    this.log('初始化数据库异常: ' + error.message, 'error');
+                }
+            }
+
+            async toggleRecording() {
+                if (this.isRecording) {
+                    this.stopRecording();
+                } else {
+                    await this.startRecording();
+                }
+            }
+
+            async startRecording() {
+                try {
+                    this.log('请求麦克风权限...');
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true
+                        } 
+                    });
+                    
+                    this.log('麦克风权限获取成功');
+                    
+                    // 检查MediaRecorder支持
+                    let mimeType = 'audio/webm;codecs=opus';
+                    if (!MediaRecorder.isTypeSupported(mimeType)) {
+                        mimeType = 'audio/webm';
+                        if (!MediaRecorder.isTypeSupported(mimeType)) {
+                            mimeType = 'audio/mp4';
+                        }
+                    }
+                    
+                    this.log('使用音频格式: ' + mimeType);
+                    
+                    this.mediaRecorder = new MediaRecorder(stream, { mimeType });
+                    this.audioChunks = [];
+                    
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.audioChunks.push(event.data);
+                            this.log(`收到音频数据: ${event.data.size} 字节`);
+                        }
+                    };
+                    
+                    this.mediaRecorder.onstop = () => {
+                        const blob = new Blob(this.audioChunks, { type: mimeType });
+                        this.currentBlob = blob;
+                        this.log(`录音完成，文件大小: ${Math.round(blob.size / 1024)}KB`, 'success');
+                        
+                        // 启用保存按钮
+                        document.getElementById('saveBtn').disabled = false;
+                        
+                        // 停止音轨
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    this.mediaRecorder.onerror = (event) => {
+                        this.log('录音错误: ' + event.error, 'error');
+                    };
+                    
+                    this.mediaRecorder.start(1000);
+                    this.isRecording = true;
+                    this.startTime = Date.now();
+                    this.startTimer();
+                    
+                    document.getElementById('recordBtn').textContent = '停止录音';
+                    this.log('录音开始...', 'success');
+                    
+                } catch (error) {
+                    this.log('录音启动失败: ' + error.message, 'error');
+                }
+            }
+
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+                    this.stopTimer();
+                    
+                    document.getElementById('recordBtn').textContent = '开始录音';
+                    this.log('录音停止');
+                }
+            }
+
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    const elapsed = Date.now() - this.startTime;
+                    const minutes = Math.floor(elapsed / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    document.getElementById('timer').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            async saveTest() {
+                if (!this.currentBlob) {
+                    this.log('没有录音数据可保存', 'error');
+                    return;
+                }
+
+                try {
+                    this.log('开始保存测试...');
+                    
+                    // 检查数据库状态
+                    if (!this.db) {
+                        this.log('数据库未初始化', 'error');
+                        return;
+                    }
+                    
+                    this.log('数据库状态: ' + this.db.readyState);
+                    
+                    // 准备数据
+                    const title = document.getElementById('title').value || '测试录音';
+                    const duration = Date.now() - this.startTime;
+                    
+                    this.log('准备录音数据...');
+                    
+                    // 转换为base64
+                    const reader = new FileReader();
+                    const audioData = await new Promise((resolve, reject) => {
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = () => reject(reader.error);
+                        reader.readAsDataURL(this.currentBlob);
+                    });
+                    
+                    this.log('音频转换完成，数据长度: ' + audioData.length);
+                    
+                    const recordingData = {
+                        id: Date.now(),
+                        title: title,
+                        date: new Date().toISOString(),
+                        duration: duration,
+                        audioData: audioData,
+                        size: Math.round(this.currentBlob.size / 1024)
+                    };
+                    
+                    this.log('录音数据准备完成');
+                    
+                    // 保存到数据库
+                    await this.saveToDatabase(recordingData);
+                    
+                } catch (error) {
+                    this.log('保存失败: ' + error.message, 'error');
+                    console.error('保存错误详情:', error);
+                }
+            }
+
+            async saveToDatabase(data) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        this.log('创建数据库事务...');
+                        
+                        const transaction = this.db.transaction(['recordings'], 'readwrite');
+                        
+                        transaction.oncomplete = () => {
+                            this.log('事务完成', 'success');
+                        };
+                        
+                        transaction.onerror = () => {
+                            this.log('事务错误: ' + transaction.error, 'error');
+                            reject(transaction.error);
+                        };
+                        
+                        const store = transaction.objectStore('recordings');
+                        this.log('获取对象存储成功');
+                        
+                        const request = store.add(data);
+                        
+                        request.onsuccess = () => {
+                            this.log('数据保存成功，ID: ' + request.result, 'success');
+                            document.getElementById('saveBtn').disabled = true;
+                            resolve(request.result);
+                        };
+                        
+                        request.onerror = () => {
+                            this.log('保存请求失败: ' + request.error, 'error');
+                            reject(request.error);
+                        };
+                        
+                    } catch (error) {
+                        this.log('数据库操作异常: ' + error.message, 'error');
+                        reject(error);
+                    }
+                });
+            }
+
+            clearData() {
+                if (this.db) {
+                    const transaction = this.db.transaction(['recordings'], 'readwrite');
+                    const store = transaction.objectStore('recordings');
+                    const request = store.clear();
+                    
+                    request.onsuccess = () => {
+                        this.log('数据清除成功', 'success');
+                    };
+                    
+                    request.onerror = () => {
+                        this.log('数据清除失败: ' + request.error, 'error');
+                    };
+                }
+            }
+        }
+
+        // 初始化
+        let recorder;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            recorder = new DebugRecorder();
+        });
+
+        function toggleRecording() {
+            recorder.toggleRecording();
+        }
+
+        function saveTest() {
+            recorder.saveTest();
+        }
+
+        function clearData() {
+            recorder.clearData();
+        }
+    </script>
+</body>
+</html> 

@@ -19,6 +19,10 @@
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
+    
+    <!-- 题库系统 -->
+    <script src="ielts-question-bank.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -486,6 +490,63 @@
             font-size: 0.9em;
         }
 
+        /* 题目显示样式 */
+        .question-display {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-content {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .question-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #4facfe;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .question-tips {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .question-tips ul {
+            margin: 0;
+            padding-left: 0;
+        }
+
+        .question-tips li {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #4facfe;
+            list-style: none;
+        }
+
+        .topic-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
         @media (max-width: 768px) {
             .recording-section {
                 grid-template-columns: 1fr;
@@ -529,12 +590,47 @@
                     <div class="recording-controls">
                         <div class="category-selector">
                             <label for="category">选择练习类别：</label>
-                            <select id="category">
+                            <select id="category" onchange="app.onCategoryChange()">
                                 <option value="Part 1">Part 1 - 日常话题</option>
                                 <option value="Part 2">Part 2 - 话题描述</option>
                                 <option value="Part 3">Part 3 - 深度讨论</option>
                                 <option value="Practice">Practice - 自由练习</option>
                             </select>
+                        </div>
+                        
+                        <!-- 题目选择区域 -->
+                        <div class="question-selector" style="margin: 20px 0;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <button class="btn btn-secondary" onclick="app.getRandomQuestion()" style="flex: 1;">
+                                    🎲 随机题目
+                                </button>
+                                <button class="btn btn-secondary" onclick="app.showTopicSelector()" style="flex: 1;">
+                                    📚 选择话题
+                                </button>
+                            </div>
+                            
+                            <!-- 话题选择器 -->
+                            <div id="topicSelector" style="display: none; margin-bottom: 15px;">
+                                <label for="topicSelect">选择话题:</label>
+                                <select id="topicSelect" onchange="app.onTopicChange()">
+                                    <option value="">请选择话题</option>
+                                </select>
+                            </div>
+                            
+                            <!-- 当前题目显示 -->
+                            <div id="currentQuestion" class="question-display">
+                                <div style="text-align: center; color: #666; padding: 20px;">
+                                    <div style="font-size: 2em; margin-bottom: 10px;">🎯</div>
+                                    <p>点击"随机题目"开始练习，或选择特定话题</p>
+                                </div>
+                            </div>
+                            
+                            <!-- 答题技巧 -->
+                            <div id="questionTips" style="display: none;" class="question-tips">
+                                <h4 style="color: #4facfe; margin-bottom: 10px;">💡 答题技巧</h4>
+                                <ul id="tipsList" style="margin-left: 20px; color: #666;">
+                                </ul>
+                            </div>
                         </div>
 
                         <button id="recordBtn" class="record-btn" onclick="toggleRecording()">
@@ -632,10 +728,14 @@
                 this.startTime = null;
                 this.timerInterval = null;
                 this.currentRecordingBlob = null;
+                this.currentQuestion = null;
                 
                 // AI分析引擎
                 this.speechEngine = new SpeechAnalysisEngine();
                 this.aiEngine = new AIAnalysisEngine();
+                
+                // 题库系统
+                this.questionBank = new IELTSQuestionBank();
                 
                 // 绑定转录更新回调
                 this.speechEngine.onTranscriptUpdate = (transcript, interim) => {
@@ -643,6 +743,7 @@
                 };
                 
                 this.initDB();
+                this.initQuestionBank();
             }
 
             // 初始化数据库
@@ -965,7 +1066,13 @@
                                 size: Math.round(this.currentRecordingBlob.size / 1024), // KB
                                 transcript: speechStats.transcript,
                                 analysis: analysis,
-                                speechStats: speechStats
+                                speechStats: speechStats,
+                                // 保存当前题目信息
+                                question: this.currentQuestion ? {
+                                    topic: this.currentQuestion.topic,
+                                    question: this.currentQuestion.question,
+                                    category: this.currentQuestion.category
+                                } : null
                             });
                         };
                         reader.onerror = () => reject(new Error('读取音频文件失败'));
@@ -1246,6 +1353,12 @@
                             <div>
                                 <div class="history-title">${recording.title}</div>
                                 <div class="history-date">${new Date(recording.date).toLocaleString('zh-CN')}</div>
+                                ${recording.question ? `
+                                    <div style="margin-top: 8px; padding: 8px; background: #f0f8ff; border-left: 3px solid #4facfe; border-radius: 4px;">
+                                        <div style="font-size: 0.9em; color: #666; margin-bottom: 4px;">练习题目:</div>
+                                        <div style="font-size: 0.95em; color: #333;">${recording.question.question}</div>
+                                    </div>
+                                ` : ''}
                             </div>
                             <div class="history-category">${recording.category}</div>
                         </div>
@@ -1504,6 +1617,175 @@
                         reject(new Error('清空录音失败'));
                     };
                 });
+            }
+
+            // === 题库功能方法 ===
+            
+            // 初始化题库界面
+            initQuestionBank() {
+                try {
+                    // 初始化类别选择器
+                    this.onCategoryChange();
+                } catch (error) {
+                    console.error('初始化题库失败:', error);
+                }
+            }
+
+            // 类别变化时更新话题选择器
+            onCategoryChange() {
+                try {
+                    const category = document.getElementById('category').value;
+                    const topicSelect = document.getElementById('topicSelect');
+                    
+                    if (!topicSelect || !this.questionBank) return;
+                    
+                    // 清空话题选择器
+                    topicSelect.innerHTML = '<option value="">请选择话题</option>';
+                    
+                    // 获取当前类别的话题
+                    const topics = this.questionBank.getTopicsByCategory(category);
+                    
+                    topics.forEach(topic => {
+                        const option = document.createElement('option');
+                        option.value = topic;
+                        option.textContent = topic;
+                        topicSelect.appendChild(option);
+                    });
+                    
+                    // 隐藏当前题目
+                    this.hideCurrentQuestion();
+                    
+                } catch (error) {
+                    console.error('更新话题选择器失败:', error);
+                }
+            }
+
+            // 获取随机题目
+            getRandomQuestion() {
+                try {
+                    const category = document.getElementById('category').value;
+                    const question = this.questionBank.getRandomQuestion(category);
+                    
+                    if (question) {
+                        this.currentQuestion = question;
+                        this.displayQuestion(question);
+                    } else {
+                        alert('该类别暂无题目');
+                    }
+                } catch (error) {
+                    console.error('获取随机题目失败:', error);
+                    alert('获取题目失败');
+                }
+            }
+
+            // 显示话题选择器
+            showTopicSelector() {
+                try {
+                    const topicSelector = document.getElementById('topicSelector');
+                    if (topicSelector) {
+                        topicSelector.style.display = topicSelector.style.display === 'none' ? 'block' : 'none';
+                    }
+                } catch (error) {
+                    console.error('显示话题选择器失败:', error);
+                }
+            }
+
+            // 话题变化时获取题目
+            onTopicChange() {
+                try {
+                    const category = document.getElementById('category').value;
+                    const topic = document.getElementById('topicSelect').value;
+                    
+                    if (!topic) {
+                        this.hideCurrentQuestion();
+                        return;
+                    }
+                    
+                    const question = this.questionBank.getQuestionByTopic(category, topic);
+                    
+                    if (question) {
+                        this.currentQuestion = question;
+                        this.displayQuestion(question);
+                    } else {
+                        alert('该话题暂无题目');
+                    }
+                } catch (error) {
+                    console.error('获取话题题目失败:', error);
+                    alert('获取题目失败');
+                }
+            }
+
+            // 显示题目
+            displayQuestion(question) {
+                try {
+                    const questionDisplay = document.getElementById('currentQuestion');
+                    const questionTips = document.getElementById('questionTips');
+                    const tipsList = document.getElementById('tipsList');
+                    
+                    if (!questionDisplay) return;
+                    
+                    // 显示题目内容
+                    questionDisplay.innerHTML = `
+                        <div class="question-title">
+                            ${this.getCategoryIcon(question.category)} ${question.topic || question.category}
+                        </div>
+                        <div class="question-content">
+                            ${question.question}
+                        </div>
+                    `;
+                    
+                    // 显示答题技巧
+                    if (question.tips && question.tips.length > 0 && questionTips && tipsList) {
+                        tipsList.innerHTML = '';
+                        question.tips.forEach(tip => {
+                            const li = document.createElement('li');
+                            li.textContent = tip;
+                            tipsList.appendChild(li);
+                        });
+                        questionTips.style.display = 'block';
+                    } else if (questionTips) {
+                        questionTips.style.display = 'none';
+                    }
+                    
+                } catch (error) {
+                    console.error('显示题目失败:', error);
+                }
+            }
+
+            // 隐藏当前题目
+            hideCurrentQuestion() {
+                try {
+                    const questionDisplay = document.getElementById('currentQuestion');
+                    const questionTips = document.getElementById('questionTips');
+                    
+                    if (questionDisplay) {
+                        questionDisplay.innerHTML = `
+                            <div style="text-align: center; color: #666; padding: 20px;">
+                                <div style="font-size: 2em; margin-bottom: 10px;">🎯</div>
+                                <p>点击"随机题目"开始练习，或选择特定话题</p>
+                            </div>
+                        `;
+                    }
+                    
+                    if (questionTips) {
+                        questionTips.style.display = 'none';
+                    }
+                    
+                    this.currentQuestion = null;
+                } catch (error) {
+                    console.error('隐藏题目失败:', error);
+                }
+            }
+
+            // 获取类别图标
+            getCategoryIcon(category) {
+                const icons = {
+                    'Part 1': '🗣️',
+                    'Part 2': '📝',
+                    'Part 3': '💭',
+                    'Practice': '🎯'
+                };
+                return icons[category] || '📚';
             }
         }
 
