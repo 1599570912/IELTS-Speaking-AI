@@ -1,0 +1,67 @@
+{
+  "name": "IELTS Speaking Practice AI",
+  "short_name": "IELTS AI",
+  "description": "AI驱动的雅思口语练习应用，提供实时语音识别和智能评分",
+  "start_url": "./ielts-speaking-app-ai.html",
+  "display": "standalone",
+  "background_color": "#4facfe",
+  "theme_color": "#4facfe",
+  "orientation": "portrait",
+  "scope": "./",
+  "lang": "zh-CN",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "开始录音",
+      "short_name": "录音",
+      "description": "直接开始IELTS口语录音练习",
+      "url": "./ielts-speaking-app-ai.html#record",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "查看历史",
+      "short_name": "历史",
+      "description": "查看历史录音和分析报告",
+      "url": "./ielts-speaking-app-ai.html#history",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+} 

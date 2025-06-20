@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Speaking App - AI智能版</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="AI驱动的雅思口语练习应用，提供实时语音识别和智能评分">
+    <meta name="theme-color" content="#4facfe">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="IELTS AI">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            border: none;
+            background: none;
+            font-size: 16px;
+        }
+
+        .tab:hover {
+            background: rgba(79, 172, 254, 0.1);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .recording-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .recording-controls {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .transcript-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .category-selector {
+            margin-bottom: 20px;
+        }
+
+        .category-selector label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .category-selector select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .record-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(238, 90, 82, 0.3);
+            margin: 20px 0;
+        }
+
+        .record-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .timer {
+            font-size: 2em;
+            font-weight: 600;
+            color: #333;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .transcript-display {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 200px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .transcript-final {
+            color: #333;
+        }
+
+        .transcript-interim {
+            color: #888;
+            font-style: italic;
+        }
+
+        .analysis-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .score-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .score-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .score-card:hover {
+            border-color: #4facfe;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.1);
+        }
+
+        .score-value {
+            font-size: 2.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .score-value.excellent { color: #28a745; }
+        .score-value.good { color: #17a2b8; }
+        .score-value.average { color: #ffc107; }
+        .score-value.poor { color: #dc3545; }
+
+        .score-label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .score-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .feedback-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feedback-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .feedback-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feedback-list {
+            list-style: none;
+        }
+
+        .feedback-list li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .save-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .save-section input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .speech-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-indicator.active {
+            background: #28a745;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+
+        .waveform {
+            height: 60px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e9ecef;
+        }
+
+        .waveform.active {
+            background: linear-gradient(90deg, #4facfe, #00f2fe, #4facfe);
+            background-size: 200% 100%;
+            animation: waveAnimation 2s linear infinite;
+        }
+
+        @keyframes waveAnimation {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #4facfe;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .history-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #4facfe;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .history-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .history-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .history-category {
+            background: #4facfe;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+        }
+
+        .history-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .history-score {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .history-score-value {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #4facfe;
+        }
+
+        .history-score-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .recording-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .score-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .feedback-section {
+                grid-template-columns: 1fr;
+            }
+
+            .history-scores {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 IELTS Speaking App</h1>
+            <p>AI智能版 - 语音识别 + 智能评分</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('record')">🎙️ 智能录音</button>
+            <button class="tab" onclick="switchTab('analysis')">📊 AI分析</button>
+            <button class="tab" onclick="switchTab('history')">📚 历史记录</button>
+        </div>
+
+        <div class="content">
+            <!-- 智能录音标签页 -->
+            <div id="record-tab" class="tab-content active">
+                <div class="recording-section">
+                    <div class="recording-controls">
+                        <div class="category-selector">
+                            <label for="category">选择练习类别：</label>
+                            <select id="category">
+                                <option value="Part 1">Part 1 - 日常话题</option>
+                                <option value="Part 2">Part 2 - 话题描述</option>
+                                <option value="Part 3">Part 3 - 深度讨论</option>
+                                <option value="Practice">Practice - 自由练习</option>
+                            </select>
+                        </div>
+
+                        <button id="recordBtn" class="record-btn" onclick="toggleRecording()">
+                            🎙️ 开始录音
+                        </button>
+
+                        <div class="timer" id="timer">00:00</div>
+
+                        <div class="speech-status">
+                            <div class="status-indicator" id="speechIndicator"></div>
+                            <span id="speechStatus">准备开始语音识别</span>
+                        </div>
+
+                        <div class="waveform" id="waveform">
+                            <span style="color: #999;">音频波形显示</span>
+                        </div>
+                    </div>
+
+                    <div class="transcript-section">
+                        <h3 style="margin-bottom: 15px;">📝 实时转录</h3>
+                        <div id="transcriptDisplay" class="transcript-display">
+                            <div style="color: #999; text-align: center; padding: 40px;">
+                                开始录音后，这里将显示实时语音转录...
+                            </div>
+                        </div>
+                        
+                        <div class="stats-grid" id="liveStats" style="margin-top: 20px; display: none;">
+                            <div class="stat-item">
+                                <div class="stat-number" id="wordCount">0</div>
+                                <div class="stat-label">词数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="wpmDisplay">0</div>
+                                <div class="stat-label">WPM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="saveSection" class="save-section" style="display: none;">
+                    <h3 style="margin-bottom: 15px;">💾 保存录音</h3>
+                    <input type="text" id="recordingTitle" placeholder="输入录音标题（可选）">
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="saveRecording()">💾 保存并分析</button>
+                        <button class="btn btn-secondary" onclick="discardRecording()">🗑️ 丢弃录音</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI分析标签页 -->
+            <div id="analysis-tab" class="tab-content">
+                <div id="analysisContent">
+                    <div style="text-align: center; color: #666; padding: 60px;">
+                        <div style="font-size: 4em; margin-bottom: 20px;">🤖</div>
+                        <h3>AI智能分析</h3>
+                        <p>完成录音后，这里将显示详细的AI分析报告</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 历史记录标签页 -->
+            <div id="history-tab" class="tab-content">
+                <div id="historyContent">
+                    <div class="history-controls" style="margin-bottom: 20px;">
+                        <select id="historyFilter" onchange="app.filterHistory()" style="padding: 8px; margin-right: 10px;">
+                            <option value="all">全部类别</option>
+                            <option value="Part 1">Part 1</option>
+                            <option value="Part 2">Part 2</option>
+                            <option value="Part 3">Part 3</option>
+                            <option value="Practice">Practice</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="app.loadHistory()">🔄 刷新</button>
+                        <button class="btn btn-danger" onclick="app.clearAllHistory()" style="float: right;">🗑️ 清空历史</button>
+                    </div>
+                    <div id="historyList">
+                        <div style="text-align: center; color: #666; padding: 60px;">
+                            <div style="font-size: 4em; margin-bottom: 20px;">📚</div>
+                            <h3>历史记录</h3>
+                            <p>正在加载历史记录...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="speech-recognition-module.js"></script>
+    <script>
+        class IELTSSpeakingAppAI {
+            constructor() {
+                this.db = null;
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.isRecording = false;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.currentRecordingBlob = null;
+                
+                // AI分析引擎
+                this.speechEngine = new SpeechAnalysisEngine();
+                this.aiEngine = new AIAnalysisEngine();
+                
+                // 绑定转录更新回调
+                this.speechEngine.onTranscriptUpdate = (transcript, interim) => {
+                    this.updateTranscriptDisplay(transcript, interim);
+                };
+                
+                this.initDB();
+            }
+
+            // 初始化数据库
+            async initDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open('IELTSAppAI', 1);
+                    
+                    request.onerror = () => reject(request.error);
+                    
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        console.log('数据库连接成功');
+                        resolve(this.db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        
+                        if (db.objectStoreNames.contains('recordings')) {
+                            db.deleteObjectStore('recordings');
+                        }
+                        
+                        const recordingStore = db.createObjectStore('recordings', { 
+                            keyPath: 'id', 
+                            autoIncrement: true 
+                        });
+                        
+                        recordingStore.createIndex('category', 'category', { unique: false });
+                        recordingStore.createIndex('date', 'date', { unique: false });
+                        recordingStore.createIndex('score', 'analysis.overall', { unique: false });
+                    };
+                });
+            }
+
+            // 开始录音
+            async startRecording() {
+                try {
+                    // 检查浏览器兼容性
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        alert('您的浏览器不支持录音功能，请使用Chrome、Firefox或Safari');
+                        return;
+                    }
+
+                    if (!window.MediaRecorder) {
+                        alert('您的浏览器不支持MediaRecorder，请升级浏览器');
+                        return;
+                    }
+
+                    // 启动音频录制
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                            sampleRate: 44100
+                        } 
+                    });
+                    
+                    // 检查支持的音频格式
+                    let mimeType = 'audio/webm;codecs=opus';
+                    if (!MediaRecorder.isTypeSupported(mimeType)) {
+                        mimeType = 'audio/webm';
+                        if (!MediaRecorder.isTypeSupported(mimeType)) {
+                            mimeType = 'audio/mp4';
+                            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                                mimeType = ''; // 使用默认格式
+                            }
+                        }
+                    }
+                    
+                    this.mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+                    this.audioChunks = [];
+                    
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.audioChunks.push(event.data);
+                        }
+                    };
+                    
+                    this.mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(this.audioChunks, { 
+                            type: mimeType || 'audio/webm' 
+                        });
+                        
+                        if (audioBlob.size === 0) {
+                            alert('录音失败：没有录制到音频数据');
+                            return;
+                        }
+                        
+                        this.currentRecordingBlob = audioBlob;
+                        this.showSaveSection();
+                        
+                        // 停止音轨
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    this.mediaRecorder.onerror = (event) => {
+                        console.error('MediaRecorder错误:', event.error);
+                        alert('录音过程中发生错误: ' + event.error);
+                    };
+                    
+                    // 启动语音识别
+                    if (this.speechEngine) {
+                        this.speechEngine.onTranscriptUpdate = (transcript, interim) => {
+                            this.updateTranscriptDisplay(transcript, interim);
+                        };
+                        
+                        const speechStarted = this.speechEngine.startRecognition();
+                        if (!speechStarted) {
+                            console.warn('语音识别启动失败，将继续录音但无法提供实时转录');
+                        }
+                    }
+                    
+                    this.mediaRecorder.start(1000); // 每秒收集一次数据
+                    this.isRecording = true;
+                    this.startTime = Date.now();
+                    this.startTimer();
+                    this.updateRecordingUI();
+                    
+                    // 显示实时统计
+                    document.getElementById('liveStats').style.display = 'grid';
+                    
+                } catch (error) {
+                    console.error('录音启动失败:', error);
+                    let errorMessage = '录音启动失败: ';
+                    
+                    if (error.name === 'NotAllowedError') {
+                        errorMessage += '麦克风权限被拒绝，请在浏览器设置中允许麦克风访问';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMessage += '未找到麦克风设备，请检查设备连接';
+                    } else if (error.name === 'NotReadableError') {
+                        errorMessage += '麦克风被其他应用占用，请关闭其他录音应用';
+                    } else if (error.name === 'OverconstrainedError') {
+                        errorMessage += '麦克风不支持请求的音频格式';
+                    } else {
+                        errorMessage += error.message || '未知错误';
+                    }
+                    
+                    alert(errorMessage);
+                }
+            }
+
+            // 停止录音
+            stopRecording() {
+                if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                    this.mediaRecorder.stop();
+                }
+                
+                this.speechEngine.stopRecognition();
+                this.isRecording = false;
+                this.stopTimer();
+                this.updateRecordingUI();
+                
+                // 更新语音状态
+                document.getElementById('speechStatus').textContent = '录音已完成';
+                document.getElementById('speechIndicator').classList.remove('active');
+            }
+
+            // 更新转录显示
+            updateTranscriptDisplay(finalTranscript, interimTranscript) {
+                const display = document.getElementById('transcriptDisplay');
+                
+                // 显示最终文本和临时文本
+                display.innerHTML = `
+                    <div class="transcript-final" style="color: #333; line-height: 1.6;">${finalTranscript}</div>
+                    <div class="transcript-interim" style="color: #999; font-style: italic; line-height: 1.6;">${interimTranscript}</div>
+                `;
+
+                // 自动滚动到底部
+                display.scrollTop = display.scrollHeight;
+
+                // 更新实时统计
+                const combinedText = finalTranscript + interimTranscript;
+                if (combinedText.trim().length > 0) {
+                    const words = combinedText.trim().split(/\s+/).filter(w => w.length > 0);
+                    const duration = Date.now() - this.startTime;
+                    const wpm = Math.round((words.length / duration) * 60000);
+                    
+                    document.getElementById('wordCount').textContent = words.length;
+                    document.getElementById('wpmDisplay').textContent = wpm;
+                }
+
+                // 更新语音状态
+                if (interimTranscript.length > 0) {
+                    document.getElementById('speechStatus').textContent = '正在识别语音...';
+                    document.getElementById('speechIndicator').classList.add('active');
+                } else if (finalTranscript.length > 0) {
+                    document.getElementById('speechStatus').textContent = '语音识别中';
+                    document.getElementById('speechIndicator').classList.add('active');
+                } else {
+                    document.getElementById('speechStatus').textContent = '等待语音输入';
+                    document.getElementById('speechIndicator').classList.remove('active');
+                }
+            }
+
+            // 开始计时器
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    const elapsed = Date.now() - this.startTime;
+                    const minutes = Math.floor(elapsed / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    document.getElementById('timer').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+
+            // 停止计时器
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            // 更新录音界面
+            updateRecordingUI() {
+                const recordBtn = document.getElementById('recordBtn');
+                const waveform = document.getElementById('waveform');
+                
+                if (this.isRecording) {
+                    recordBtn.textContent = '⏹️ 停止录音';
+                    recordBtn.classList.add('recording');
+                    waveform.classList.add('active');
+                    waveform.innerHTML = '<span style="color: white;">🎵 正在录音中...</span>';
+                } else {
+                    recordBtn.textContent = '🎙️ 开始录音';
+                    recordBtn.classList.remove('recording');
+                    waveform.classList.remove('active');
+                    waveform.innerHTML = '<span style="color: #999;">音频波形显示</span>';
+                }
+            }
+
+            // 显示保存区域
+            showSaveSection() {
+                document.getElementById('saveSection').style.display = 'block';
+                const category = document.getElementById('category').value;
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('zh-CN');
+                const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                
+                document.getElementById('recordingTitle').value = 
+                    `${category} - ${dateStr} ${timeStr}`;
+            }
+
+            // 保存录音并进行AI分析
+            async saveRecording() {
+                const title = document.getElementById('recordingTitle').value.trim();
+                const category = document.getElementById('category').value;
+                
+                if (!this.currentRecordingBlob) {
+                    alert('没有可保存的录音，请先录制音频');
+                    return;
+                }
+
+                try {
+                    // 显示保存进度
+                    const saveBtn = document.querySelector('.btn-primary');
+                    const originalText = saveBtn.textContent;
+                    saveBtn.textContent = '正在保存...';
+                    saveBtn.disabled = true;
+
+                    // 获取语音统计数据
+                    let speechStats;
+                    try {
+                        speechStats = this.speechEngine ? this.speechEngine.calculateSpeechStats() : {
+                            duration: Date.now() - this.startTime,
+                            wordCount: 0,
+                            wpm: 0,
+                            transcript: document.getElementById('transcriptDisplay').textContent || '',
+                            pauseCount: 0
+                        };
+                        console.log('语音统计数据:', speechStats);
+                    } catch (error) {
+                        console.warn('获取语音统计失败，使用默认数据:', error);
+                        speechStats = {
+                            duration: Date.now() - this.startTime,
+                            wordCount: 0,
+                            wpm: 0,
+                            transcript: '语音识别异常',
+                            pauseCount: 0
+                        };
+                    }
+                    
+                    // 进行AI分析
+                    let analysis;
+                    try {
+                        analysis = await this.aiEngine.analyzeRecording(speechStats, category);
+                        console.log('AI分析完成:', analysis);
+                    } catch (error) {
+                        console.warn('AI分析失败，使用默认分析:', error);
+                        analysis = {
+                            overall: 5.0,
+                            fluency: { score: 5.0, wpm: speechStats.wpm || 0 },
+                            vocabulary: { score: 5.0, uniqueWords: 0, diversity: 0 },
+                            grammar: { score: 5.0, sentenceCount: 0, avgSentenceLength: 0 },
+                            pronunciation: { score: 5.0, clarity: 'unknown' },
+                            strengths: ['完成了录音练习'],
+                            improvements: [{ area: '系统', suggestion: 'AI分析功能暂时不可用，请稍后重试' }]
+                        };
+                    }
+                    
+                    // 检查存储空间
+                    if (this.currentRecordingBlob.size > 10 * 1024 * 1024) { // 10MB限制
+                        throw new Error('录音文件过大，请录制较短的音频');
+                    }
+                    
+                    // 准备存储数据
+                    const reader = new FileReader();
+                    
+                    const recordingData = await new Promise((resolve, reject) => {
+                        reader.onload = () => {
+                            resolve({
+                                id: Date.now(),
+                                title: title || `${category} - ${new Date().toLocaleString('zh-CN')}`,
+                                category: category,
+                                date: new Date().toISOString(),
+                                duration: speechStats.duration,
+                                audioData: reader.result, // 使用base64格式而不是ArrayBuffer
+                                mimeType: 'audio/webm;codecs=opus',
+                                size: Math.round(this.currentRecordingBlob.size / 1024), // KB
+                                transcript: speechStats.transcript,
+                                analysis: analysis,
+                                speechStats: speechStats
+                            });
+                        };
+                        reader.onerror = () => reject(new Error('读取音频文件失败'));
+                        reader.readAsDataURL(this.currentRecordingBlob);
+                    });
+
+                    // 保存到IndexedDB
+                    await this.saveRecordingToDB(recordingData);
+                    console.log('录音保存到数据库成功');
+                    
+                    // 显示分析结果
+                    try {
+                        this.displayAnalysis(analysis, speechStats);
+                        console.log('分析结果显示成功');
+                        
+                        // 切换到分析标签页
+                        switchTab('analysis');
+                        console.log('标签页切换成功');
+                    } catch (error) {
+                        console.warn('显示分析结果失败:', error);
+                    }
+                    
+                    alert(`录音保存成功！文件大小: ${recordingData.size}KB，AI分析已完成！`);
+                    this.discardRecording();
+                    
+                    // 如果当前在历史记录页面，刷新历史记录
+                    if (document.getElementById('history-tab').classList.contains('active')) {
+                        this.loadHistory();
+                    }
+                    
+                    // 恢复按钮状态
+                    saveBtn.textContent = originalText;
+                    saveBtn.disabled = false;
+                    
+                } catch (error) {
+                    console.error('保存录音失败:', error);
+                    alert('保存录音失败: ' + error.message);
+                    
+                    // 恢复按钮状态
+                    const saveBtn = document.querySelector('.btn-primary');
+                    saveBtn.textContent = '💾 保存并分析';
+                    saveBtn.disabled = false;
+                }
+            }
+
+            // 保存到数据库
+            async saveRecordingToDB(recordingData) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        // 检查数据库是否已初始化
+                        if (!this.db) {
+                            reject(new Error('数据库未初始化'));
+                            return;
+                        }
+
+                        // 数据库连接状态检查（readyState可能不存在）
+                        console.log('数据库状态:', this.db.readyState);
+                        // 移除严格的状态检查，因为readyState可能为undefined但数据库仍可用
+
+                        const transaction = this.db.transaction(['recordings'], 'readwrite');
+                        
+                        transaction.onerror = () => {
+                            reject(new Error('数据库事务创建失败: ' + transaction.error));
+                        };
+
+                        const store = transaction.objectStore('recordings');
+                        const request = store.add(recordingData);
+                        
+                        request.onsuccess = () => {
+                            console.log('录音保存成功，ID:', request.result);
+                            resolve(request.result);
+                        };
+                        
+                        request.onerror = () => {
+                            console.error('保存录音失败:', request.error);
+                            reject(new Error('保存录音失败: ' + request.error));
+                        };
+
+                    } catch (error) {
+                        console.error('saveRecordingToDB 异常:', error);
+                        reject(new Error('数据库操作异常: ' + error.message));
+                    }
+                });
+            }
+
+            // 显示AI分析结果
+            displayAnalysis(analysis, speechStats) {
+                const content = document.getElementById('analysisContent');
+                
+                const getScoreClass = (score) => {
+                    if (score >= 8) return 'excellent';
+                    if (score >= 7) return 'good';
+                    if (score >= 6) return 'average';
+                    return 'poor';
+                };
+
+                content.innerHTML = `
+                    <div class="analysis-section">
+                        <h2 style="margin-bottom: 30px; text-align: center;">🤖 AI智能分析报告</h2>
+                        
+                        <div class="score-overview">
+                            <div class="score-card">
+                                <div class="score-value ${getScoreClass(analysis.overall)}">${analysis.overall.toFixed(1)}</div>
+                                <div class="score-label">总分</div>
+                                <div class="score-details">IELTS 雅思评分</div>
+                            </div>
+                            <div class="score-card">
+                                <div class="score-value ${getScoreClass(analysis.fluency.score)}">${analysis.fluency.score.toFixed(1)}</div>
+                                <div class="score-label">流畅度</div>
+                                <div class="score-details">${analysis.fluency.wpm} WPM</div>
+                            </div>
+                            <div class="score-card">
+                                <div class="score-value ${getScoreClass(analysis.vocabulary.score)}">${analysis.vocabulary.score.toFixed(1)}</div>
+                                <div class="score-label">词汇</div>
+                                <div class="score-details">${analysis.vocabulary.uniqueWords} 个不同词汇</div>
+                            </div>
+                            <div class="score-card">
+                                <div class="score-value ${getScoreClass(analysis.grammar.score)}">${analysis.grammar.score.toFixed(1)}</div>
+                                <div class="score-label">语法</div>
+                                <div class="score-details">${analysis.grammar.sentenceCount} 个句子</div>
+                            </div>
+                            <div class="score-card">
+                                <div class="score-value ${getScoreClass(analysis.pronunciation.score)}">${analysis.pronunciation.score.toFixed(1)}</div>
+                                <div class="score-label">发音</div>
+                                <div class="score-details">${analysis.pronunciation.clarity}</div>
+                            </div>
+                        </div>
+
+                        <div class="feedback-section">
+                            <div class="feedback-card">
+                                <div class="feedback-title">
+                                    💪 您的优势
+                                </div>
+                                <ul class="feedback-list">
+                                    ${analysis.strengths.map(strength => `<li>${strength}</li>`).join('')}
+                                    ${analysis.strengths.length === 0 ? '<li>继续努力，您正在进步中！</li>' : ''}
+                                </ul>
+                            </div>
+
+                            <div class="feedback-card">
+                                <div class="feedback-title">
+                                    🎯 改进建议
+                                </div>
+                                <ul class="feedback-list">
+                                    ${analysis.improvements.map(improvement => `
+                                        <li>
+                                            <strong>${improvement.area}:</strong> ${improvement.suggestion}
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+
+                            <div class="feedback-card">
+                                <div class="feedback-title">
+                                    📊 详细分析
+                                </div>
+                                <ul class="feedback-list">
+                                    <li><strong>总词数:</strong> ${speechStats.wordCount} 词</li>
+                                    <li><strong>语速:</strong> ${analysis.fluency.wpm} 词/分钟</li>
+                                    <li><strong>词汇多样性:</strong> ${(analysis.vocabulary.diversity * 100).toFixed(1)}%</li>
+                                    <li><strong>平均句长:</strong> ${analysis.grammar.avgSentenceLength.toFixed(1)} 词</li>
+                                    <li><strong>录音时长:</strong> ${this.formatDuration(speechStats.duration)}</li>
+                                </ul>
+                            </div>
+
+                            <div class="feedback-card">
+                                <div class="feedback-title">
+                                    📝 转录文本
+                                </div>
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; line-height: 1.6; max-height: 200px; overflow-y: auto;">
+                                    ${speechStats.transcript || '未检测到语音内容'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 丢弃录音
+            discardRecording() {
+                this.currentRecordingBlob = null;
+                document.getElementById('saveSection').style.display = 'none';
+                document.getElementById('recordingTitle').value = '';
+                document.getElementById('timer').textContent = '00:00';
+                document.getElementById('transcriptDisplay').innerHTML = `
+                    <div style="color: #999; text-align: center; padding: 40px;">
+                        开始录音后，这里将显示实时语音转录...
+                    </div>
+                `;
+                document.getElementById('liveStats').style.display = 'none';
+                document.getElementById('speechStatus').textContent = '准备开始语音识别';
+                document.getElementById('speechIndicator').classList.remove('active');
+            }
+
+            // 格式化时长
+            formatDuration(milliseconds) {
+                const seconds = Math.floor(milliseconds / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }
+
+            // 加载历史记录
+            async loadHistory() {
+                try {
+                    const recordings = await this.getAllRecordings();
+                    this.displayHistory(recordings);
+                } catch (error) {
+                    console.error('加载历史记录失败:', error);
+                    document.getElementById('historyList').innerHTML = `
+                        <div style="text-align: center; color: #666; padding: 60px;">
+                            <div style="font-size: 4em; margin-bottom: 20px;">❌</div>
+                            <h3>加载失败</h3>
+                            <p>无法加载历史记录: ${error.message}</p>
+                            <button class="btn btn-primary" onclick="app.loadHistory()" style="margin-top: 20px;">重试</button>
+                        </div>
+                    `;
+                }
+            }
+
+            // 获取所有录音记录
+            async getAllRecordings() {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) {
+                        reject(new Error('数据库未初始化'));
+                        return;
+                    }
+
+                    const transaction = this.db.transaction(['recordings'], 'readonly');
+                    const store = transaction.objectStore('recordings');
+                    const request = store.getAll();
+
+                    request.onsuccess = () => {
+                        const recordings = request.result.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        resolve(recordings);
+                    };
+
+                    request.onerror = () => {
+                        reject(new Error('获取录音记录失败'));
+                    };
+                });
+            }
+
+            // 显示历史记录
+            displayHistory(recordings) {
+                const historyList = document.getElementById('historyList');
+                
+                if (recordings.length === 0) {
+                    historyList.innerHTML = `
+                        <div style="text-align: center; color: #666; padding: 60px;">
+                            <div style="font-size: 4em; margin-bottom: 20px;">📚</div>
+                            <h3>暂无历史记录</h3>
+                            <p>开始录制您的第一个IELTS口语练习吧！</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const currentFilter = document.getElementById('historyFilter').value;
+                const filteredRecordings = currentFilter === 'all' 
+                    ? recordings 
+                    : recordings.filter(r => r.category === currentFilter);
+
+                if (filteredRecordings.length === 0) {
+                    historyList.innerHTML = `
+                        <div style="text-align: center; color: #666; padding: 60px;">
+                            <div style="font-size: 4em; margin-bottom: 20px;">🔍</div>
+                            <h3>未找到记录</h3>
+                            <p>当前分类下暂无录音记录</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                historyList.innerHTML = filteredRecordings.map(recording => `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <div>
+                                <div class="history-title">${recording.title}</div>
+                                <div class="history-date">${new Date(recording.date).toLocaleString('zh-CN')}</div>
+                            </div>
+                            <div class="history-category">${recording.category}</div>
+                        </div>
+                        
+                        ${recording.analysis ? `
+                            <div class="history-scores">
+                                <div class="history-score">
+                                    <div class="history-score-value">${recording.analysis.overall.toFixed(1)}</div>
+                                    <div class="history-score-label">总分</div>
+                                </div>
+                                <div class="history-score">
+                                    <div class="history-score-value">${recording.analysis.fluency.score.toFixed(1)}</div>
+                                    <div class="history-score-label">流畅度</div>
+                                </div>
+                                <div class="history-score">
+                                    <div class="history-score-value">${recording.analysis.vocabulary.score.toFixed(1)}</div>
+                                    <div class="history-score-label">词汇</div>
+                                </div>
+                                <div class="history-score">
+                                    <div class="history-score-value">${recording.analysis.grammar.score.toFixed(1)}</div>
+                                    <div class="history-score-label">语法</div>
+                                </div>
+                                <div class="history-score">
+                                    <div class="history-score-value">${recording.analysis.pronunciation.score.toFixed(1)}</div>
+                                    <div class="history-score-label">发音</div>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <div style="margin: 15px 0; color: #666; font-size: 0.9em;">
+                            <span>📊 时长: ${this.formatDuration(recording.duration)}</span>
+                            <span style="margin-left: 20px;">📝 ${recording.speechStats?.wordCount || 0} 词</span>
+                            <span style="margin-left: 20px;">💾 ${recording.size}KB</span>
+                        </div>
+                        
+                        <div class="history-actions">
+                            <button class="btn btn-secondary btn-small" onclick="app.playHistoryRecording(${recording.id})">
+                                🎵 播放
+                            </button>
+                            <button class="btn btn-secondary btn-small" onclick="app.viewHistoryAnalysis(${recording.id})">
+                                📊 查看分析
+                            </button>
+                            <button class="btn btn-secondary btn-small" onclick="app.viewHistoryTranscript(${recording.id})">
+                                📝 查看转录
+                            </button>
+                            <button class="btn btn-danger btn-small" onclick="app.deleteHistoryRecording(${recording.id})">
+                                🗑️ 删除
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 筛选历史记录
+            filterHistory() {
+                this.loadHistory();
+            }
+
+            // 播放历史录音
+            async playHistoryRecording(id) {
+                try {
+                    const recording = await this.getRecordingById(id);
+                    if (!recording || !recording.audioData) {
+                        alert('录音数据不存在');
+                        return;
+                    }
+
+                    // 创建音频播放器
+                    const audio = new Audio(recording.audioData);
+                    audio.play();
+                    
+                    // 显示播放状态
+                    const playBtn = event.target;
+                    const originalText = playBtn.textContent;
+                    playBtn.textContent = '⏸️ 播放中...';
+                    playBtn.disabled = true;
+                    
+                    audio.onended = () => {
+                        playBtn.textContent = originalText;
+                        playBtn.disabled = false;
+                    };
+                    
+                    audio.onerror = () => {
+                        playBtn.textContent = originalText;
+                        playBtn.disabled = false;
+                        alert('播放失败');
+                    };
+                    
+                } catch (error) {
+                    console.error('播放录音失败:', error);
+                    alert('播放失败: ' + error.message);
+                }
+            }
+
+            // 查看历史分析
+            async viewHistoryAnalysis(id) {
+                try {
+                    const recording = await this.getRecordingById(id);
+                    if (!recording || !recording.analysis) {
+                        alert('分析数据不存在');
+                        return;
+                    }
+
+                    // 显示分析结果
+                    this.displayAnalysis(recording.analysis, recording.speechStats);
+                    switchTab('analysis');
+                    
+                } catch (error) {
+                    console.error('查看分析失败:', error);
+                    alert('查看分析失败: ' + error.message);
+                }
+            }
+
+            // 查看历史转录
+            async viewHistoryTranscript(id) {
+                try {
+                    const recording = await this.getRecordingById(id);
+                    if (!recording) {
+                        alert('录音数据不存在');
+                        return;
+                    }
+
+                    const transcript = recording.transcript || '无转录文本';
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                        background: rgba(0,0,0,0.5); z-index: 1000;
+                        display: flex; align-items: center; justify-content: center;
+                        padding: 20px;
+                    `;
+                    
+                    modal.innerHTML = `
+                        <div style="
+                            background: white; border-radius: 12px; padding: 30px;
+                            max-width: 600px; width: 100%; max-height: 80vh;
+                            overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                        ">
+                            <h3 style="margin-bottom: 20px; color: #333;">📝 转录文本</h3>
+                            <div style="
+                                background: #f8f9fa; padding: 20px; border-radius: 8px;
+                                line-height: 1.6; max-height: 400px; overflow-y: auto;
+                                border: 1px solid #e9ecef;
+                            ">${transcript}</div>
+                            <div style="text-align: right; margin-top: 20px;">
+                                <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">
+                                    关闭
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                    modal.onclick = (e) => {
+                        if (e.target === modal) modal.remove();
+                    };
+                    
+                } catch (error) {
+                    console.error('查看转录失败:', error);
+                    alert('查看转录失败: ' + error.message);
+                }
+            }
+
+            // 删除历史录音
+            async deleteHistoryRecording(id) {
+                if (!confirm('确定要删除这个录音吗？此操作不可恢复。')) {
+                    return;
+                }
+
+                try {
+                    await this.deleteRecordingById(id);
+                    this.loadHistory(); // 刷新列表
+                    alert('删除成功');
+                } catch (error) {
+                    console.error('删除录音失败:', error);
+                    alert('删除失败: ' + error.message);
+                }
+            }
+
+            // 清空所有历史记录
+            async clearAllHistory() {
+                if (!confirm('确定要清空所有历史记录吗？此操作不可恢复。')) {
+                    return;
+                }
+
+                try {
+                    await this.clearAllRecordings();
+                    this.loadHistory(); // 刷新列表
+                    alert('清空成功');
+                } catch (error) {
+                    console.error('清空历史记录失败:', error);
+                    alert('清空失败: ' + error.message);
+                }
+            }
+
+            // 根据ID获取录音
+            async getRecordingById(id) {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) {
+                        reject(new Error('数据库未初始化'));
+                        return;
+                    }
+
+                    const transaction = this.db.transaction(['recordings'], 'readonly');
+                    const store = transaction.objectStore('recordings');
+                    const request = store.get(id);
+
+                    request.onsuccess = () => {
+                        resolve(request.result);
+                    };
+
+                    request.onerror = () => {
+                        reject(new Error('获取录音失败'));
+                    };
+                });
+            }
+
+            // 根据ID删除录音
+            async deleteRecordingById(id) {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) {
+                        reject(new Error('数据库未初始化'));
+                        return;
+                    }
+
+                    const transaction = this.db.transaction(['recordings'], 'readwrite');
+                    const store = transaction.objectStore('recordings');
+                    const request = store.delete(id);
+
+                    request.onsuccess = () => {
+                        resolve();
+                    };
+
+                    request.onerror = () => {
+                        reject(new Error('删除录音失败'));
+                    };
+                });
+            }
+
+            // 清空所有录音
+            async clearAllRecordings() {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) {
+                        reject(new Error('数据库未初始化'));
+                        return;
+                    }
+
+                    const transaction = this.db.transaction(['recordings'], 'readwrite');
+                    const store = transaction.objectStore('recordings');
+                    const request = store.clear();
+
+                    request.onsuccess = () => {
+                        resolve();
+                    };
+
+                    request.onerror = () => {
+                        reject(new Error('清空录音失败'));
+                    };
+                });
+            }
+        }
+
+        // 全局变量
+        let app;
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', async () => {
+            app = new IELTSSpeakingAppAI();
+        });
+
+        // 切换标签页
+        function switchTab(tabName) {
+            try {
+                // 更新标签按钮状态
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // 找到对应的标签按钮并激活
+                const targetTab = document.querySelector(`[onclick*="${tabName}"]`);
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                }
+
+                // 显示对应内容
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // 修正标签页ID匹配
+                const targetContent = document.getElementById(`${tabName}-tab`);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                } else {
+                    console.warn(`未找到标签内容: ${tabName}-tab`);
+                }
+                
+                // 如果切换到历史记录标签页，自动加载历史记录
+                if (tabName === 'history' && app) {
+                    app.loadHistory();
+                }
+                
+            } catch (error) {
+                console.error('切换标签页失败:', error);
+            }
+        }
+
+        // 切换录音状态
+        function toggleRecording() {
+            if (app.isRecording) {
+                app.stopRecording();
+            } else {
+                app.startRecording();
+            }
+        }
+
+        // 保存录音
+        function saveRecording() {
+            app.saveRecording();
+        }
+
+        // 丢弃录音
+        function discardRecording() {
+            app.discardRecording();
+        }
+
+        // PWA Service Worker 注册
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                        
+                        // 检查是否可以安装PWA
+                        let deferredPrompt;
+                        window.addEventListener('beforeinstallprompt', (e) => {
+                            e.preventDefault();
+                            deferredPrompt = e;
+                            
+                            // 显示安装提示
+                            showInstallPrompt(deferredPrompt);
+                        });
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // 显示PWA安装提示
+        function showInstallPrompt(deferredPrompt) {
+            // 创建安装提示横幅
+            const installBanner = document.createElement('div');
+            installBanner.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                color: white; padding: 15px; text-align: center;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            `;
+            installBanner.innerHTML = `
+                <div style="max-width: 600px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+                    <span>📱 安装IELTS AI应用到桌面，获得更好的使用体验！</span>
+                    <div>
+                        <button onclick="installPWA()" style="
+                            background: white; color: #4facfe; border: none; padding: 8px 16px;
+                            border-radius: 20px; margin-right: 10px; cursor: pointer; font-weight: 600;
+                        ">安装</button>
+                        <button onclick="dismissInstallPrompt()" style="
+                            background: transparent; color: white; border: 1px solid white;
+                            padding: 8px 16px; border-radius: 20px; cursor: pointer;
+                        ">稍后</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(installBanner);
+            window.installBanner = installBanner;
+            window.deferredPrompt = deferredPrompt;
+        }
+
+        // 安装PWA
+        function installPWA() {
+            if (window.deferredPrompt) {
+                window.deferredPrompt.prompt();
+                window.deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('用户接受了安装提示');
+                    } else {
+                        console.log('用户拒绝了安装提示');
+                    }
+                    window.deferredPrompt = null;
+                    dismissInstallPrompt();
+                });
+            }
+        }
+
+        // 关闭安装提示
+        function dismissInstallPrompt() {
+            if (window.installBanner) {
+                window.installBanner.remove();
+            }
+        }
+    </script>
+</body>
+</html> 
